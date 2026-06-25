@@ -1,6 +1,6 @@
 {
   "name": "android-app-debug-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP version of the Android debug skill. Exposes adb / emulator / logcat / screenshot / UI-tree as MCP tools; the host LLM (Claude Code) selects each UI action itself. No separate LLM API key required.",
   "author": {
     "name": "Team Marvis (SungKyunKwan University)",

@@ -1,6 +1,6 @@
 [project]
 name = "android-app-debug-mcp"
-version = "0.1.0"
+version = "0.2.1"
 description = "MCP server for end-to-end Android debug sessions on an emulator."
 readme = "README.md"
 license = { text = "MIT" }
