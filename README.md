@@ -72,7 +72,7 @@ Writes `~/.config/android-app-debug/config.json` with non-secret defaults (SDK p
 | `finish_test` | Write `report.md` + `timeline.md`, stop logcat, return the report markdown |
 | `abort_session` | Stop logcat without writing a verdict report |
 
-Each action tool returns one text block (task metadata, step counter, UI element list) and two image blocks (raw screenshot, annotated screenshot). Coordinates are in image space (half device resolution); the server scales them up before invoking `adb input`.
+Each action tool returns one text block (task metadata, step counter, UI element list) and one image block (raw screenshot). Coordinates are in image space (half device resolution); the server scales them up before invoking `adb input`.
 
 See [`SKILL.md`](./SKILL.md) for the full agent-facing contract: workflow, information-trust hierarchy, coordinate conventions, UX-observation rubric, and the `report` markdown template.
 
@@ -86,7 +86,6 @@ android-app-debug/2026-05-28T22-15-04/
 ├── trace.jsonl             # one row per step with the action JSON
 ├── screenshots/
 │   ├── step01_raw.jpg
-│   ├── step01_annotated.jpg
 │   └── ...
 ├── report.md               # verdict supplied to finish_test
 ├── timeline.md             # report + logcat in one file — the file to read after a run

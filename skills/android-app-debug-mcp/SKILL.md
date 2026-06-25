@@ -32,7 +32,7 @@ One structured task per invocation. Compose a task, start a session, loop throug
 
 At most one debug session is active per server process. `start_debug_session` installs it; the action and observation tools operate on the current session implicitly. `finish_test` and `abort_session` clear it. There is no `session_id` parameter.
 
-Every action and observation tool returns one text block (task metadata, step counter, last error, UI element list) and two image blocks (raw screenshot, annotated screenshot).
+Every action and observation tool returns one text block (task metadata, step counter, last error, UI element list) and one image block (raw screenshot).
 
 ## Workflow
 
@@ -43,25 +43,25 @@ Every action and observation tool returns one text block (task metadata, step co
 
    If `adb.found` or `emulator.found` is `false`, stop and tell the user to install the Android SDK / set `ANDROID_SDK_ROOT`.
 
-2. **Start the session.** Call `start_debug_session` with the resolved values. The first observation comes back with the raw + annotated screenshots — start reasoning from there.
+2. **Start the session.** Call `start_debug_session` with the resolved values. The first observation comes back with the raw screenshot — start reasoning from there.
 
 3. **Loop: observe → decide → act.** Look at the raw screenshot first to establish current state. Reconcile with the prior turn — if the previous action's expected outcome didn't happen, acknowledge it and adapt. Then call exactly one action tool. The response is the next observation; repeat until a verdict is reachable.
 
    Hard cap of **20 steps**. Once the step counter hits `max_steps`, action tools refuse — call `finish_test` next.
 
-4. **Finish.** Call `finish_test(outcome="pass"|"fail"|"inconclusive", report=...)`. Compose `report` as developer-facing markdown — include UX observations as bullets and embed screenshots inline (`![alt](screenshots/step03_raw.jpg)`). Captured frames live at `screenshots/stepNN_raw.jpg` and `screenshots/stepNN_annotated.jpg` relative to the run directory. The tool returns the full report markdown as a string — surface it directly to the user.
+4. **Finish.** Call `finish_test(outcome="pass"|"fail"|"inconclusive", report=...)`. Compose `report` as developer-facing markdown — include UX observations as bullets and embed screenshots inline (`![alt](screenshots/step03_raw.jpg)`). Captured frames live at `screenshots/stepNN_raw.jpg` relative to the run directory. The tool returns the full report markdown as a string — surface it directly to the user.
 
 ## Information trust hierarchy
 
 1. **Raw screenshot (GROUND TRUTH)** — the unmodified screenshot is the authoritative source for what is on screen.
-2. **Annotated screenshot + UI element list (SUPPLEMENTARY)** — useful for locating coordinates of interactive elements, but may include phantom elements (occluded by the keyboard, behind overlays, off-screen, or invisible accessibility nodes). Always cross-reference against the raw screenshot.
+2. **UI element list (SUPPLEMENTARY)** — useful for locating coordinates of interactive elements, but may include phantom elements (occluded by the keyboard, behind overlays, off-screen, or invisible accessibility nodes). Always cross-reference against the raw screenshot.
 3. **Conversation history (INTENDED ACTIONS ONLY)** — records what was tried, not what actually happened. Actions can fail silently. Verify outcomes against the **current** raw screenshot, not against history.
 
 ## Reasoning order at every step
 
 1. Look at the raw screenshot first and determine the actual current state.
 2. Reconcile with prior turns: if the previous action's expected outcome did not happen, acknowledge it and adapt — do not assume success.
-3. Use the annotated screenshot + UI element list to find coordinates for the next action — only after confirming the target element is actually visible in the raw screenshot.
+3. Use the UI element list to find coordinates for the next action — only after confirming the target element is actually visible in the raw screenshot.
 4. Pick exactly one action tool. Pass a past-tense `summary` (≤ 80 chars). Pass `ux_feedback` only when friction was observed on the current screen.
 
 ## Coordinate and action conventions
@@ -116,7 +116,7 @@ of tapping Sign In with the password field empty.
 
 - `logcat.log` — annotated logcat stream with inline `<<< MARVIS_DEV ... >>>` markers, one per fired action.
 - `trace.jsonl` — one row per step with the action JSON.
-- `screenshots/step{NN}_raw.jpg` and `step{NN}_annotated.jpg`.
+- `screenshots/step{NN}_raw.jpg`.
 - `report.md` — the verdict supplied to `finish_test` (also returned as the tool's response string).
 - `timeline.md` — assembled report + logcat in one file. On disk for the user to browse later.
 - `build_error.log` — only present if Gradle failed.

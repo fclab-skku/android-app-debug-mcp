@@ -3,13 +3,13 @@
 The pipeline:
 
 1. Screencap the device (PNG via ``adb exec-out screencap -p``).
-2. Resize to ``img_w x img_h`` (half device resolution) so Marvis bounding boxes
-   land correctly and so we stay under provider-side per-image dimension caps.
+2. Resize to ``img_w x img_h`` (half device resolution) so UI element
+   coordinates land correctly and so we stay under provider-side per-image
+   dimension caps.
 3. Dump the uiautomator XML and parse it into a numbered element list.
-4. Annotate the resized screenshot with bounding boxes + labels.
-5. Persist both screenshots (JPEG q=80) to ``<run_dir>/screenshots/`` for
+4. Persist the raw screenshot (JPEG q=80) to ``<run_dir>/screenshots/`` for
    post-run inspection.
-6. Return an MCP-friendly payload: two ImageContent blocks (raw + annotated)
+5. Return an MCP-friendly payload: one ImageContent block (raw screenshot)
    plus one TextContent block carrying the UI element list and run metadata
    (step counter, screen dims, last error from the previous step).
 
@@ -91,16 +91,14 @@ def capture_and_render(
     except Exception as e:
         sess.last_error = (sess.last_error + " | " if sess.last_error else "") + f"uiautomator dump failed: {e}"
 
-    # --- 2. Parse + annotate ---
+    # --- 2. Parse UI tree ---
     if ui_xml:
         ui_elements_str = sess.parser.parse(ui_xml, (sess.img_w, sess.img_h))
     else:
         ui_elements_str = "No UI elements available."
-    annotated_b64 = sess.parser.annotate_base64(raw_b64) if raw_b64 else ""
 
     # --- 3. Re-encode for transport: JPEG ~80 cuts payload by ~3-5x vs PNG ---
     raw_jpeg_b64 = _png_b64_to_jpeg_b64(raw_b64) if raw_b64 else ""
-    annotated_jpeg_b64 = _png_b64_to_jpeg_b64(annotated_b64) if annotated_b64 else ""
 
     # --- 4. Persist artifacts ---
     sess.step += 1
@@ -108,10 +106,8 @@ def capture_and_render(
     shots_dir = sess.run_dir / "screenshots"
     if raw_jpeg_b64:
         _save_bytes_b64(raw_jpeg_b64, shots_dir / f"step{step_n:02d}_raw.jpg")
-    if annotated_jpeg_b64:
-        _save_bytes_b64(annotated_jpeg_b64, shots_dir / f"step{step_n:02d}_annotated.jpg")
 
-    # --- 4. Trace row ---
+    # --- 5. Trace row ---
     trace_row: Dict[str, Any] = {
         "step": step_n,
         "action": action_meta,
@@ -122,7 +118,7 @@ def capture_and_render(
     with trace_path.open("a", encoding="utf-8") as fp:
         fp.write(json.dumps(trace_row) + "\n")
 
-    # --- 5. Build the MCP content list ---
+    # --- 6. Build the MCP content list ---
     pending_error = sess.last_error
     sess.last_error = None  # consumed by this observation
 
@@ -159,14 +155,11 @@ def capture_and_render(
     if step_n == 1:
         summary_lines += [
             "",
-            "Raw screenshot is the first attached image (GROUND TRUTH).",
-            "Annotated screenshot with bounding-box labels is the second attached image (SUPPLEMENTARY).",
+            "Raw screenshot is the attached image (GROUND TRUTH).",
         ]
     text_block = TextContent(type="text", text="\n".join(summary_lines))
 
     content: List[Any] = [text_block]
     if raw_jpeg_b64:
         content.append(ImageContent(type="image", data=raw_jpeg_b64, mimeType="image/jpeg"))
-    if annotated_jpeg_b64:
-        content.append(ImageContent(type="image", data=annotated_jpeg_b64, mimeType="image/jpeg"))
     return content

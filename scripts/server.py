@@ -253,7 +253,7 @@ def start_debug_session(
 ) -> List[Any]:
     """Build, install, launch, and start a fresh debug session.
 
-    Returns the first screen observation (text + raw + annotated images).
+    Returns the first screen observation (text + raw screenshot image).
     Only one session may be active at a time; call ``finish_test`` or
     ``abort_session`` first if another session is already running.
     Hard caps ``max_steps`` at 20.
@@ -581,7 +581,7 @@ def finish_test(outcome: str, report: str) -> str:
     ``report`` is a markdown string addressed to a developer. Include any
     UX observations and image links (``![alt](screenshots/step03_raw.jpg)``)
     inline — captured screenshots live under ``screenshots/stepNN_raw.jpg``
-    and ``stepNN_annotated.jpg`` relative to the run directory.
+    relative to the run directory.
 
     Returns the full ``report.md`` contents as a string, with the run
     directory path on the first line so the user can locate the artifacts.
