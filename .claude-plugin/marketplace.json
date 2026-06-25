@@ -10,7 +10,7 @@
       "name": "android-app-debug-mcp",
       "source": "./",
       "description": "MCP-based Android debug skill. Host LLM (Claude Code) selects each UI action; server exposes adb / gradle / emulator / logcat / UI-tree as MCP tools.",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "author": {
         "name": "Team Marvis (SungKyunKwan University)",
         "url": "https://marvis-ai.com/"
